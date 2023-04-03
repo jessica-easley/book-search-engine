@@ -1,12 +1,29 @@
 const express = require('express');
 const path = require('path');
 const db = require('./config/connection');
-const routes = require('./routes');
+const { ApolloServer } = require('apollo-server-express');
+const { typeDefs, resolvers } = require('./schemas');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-app.use(express.urlencoded({ extended: true }));
+const startServer = async () => {
+  const server = new ApolloServer({
+    typeDefs,
+    resolvers,
+    context: authMiddleware
+  });
+
+  await server.start();
+
+  server.applyMiddleware({ app });
+
+  console.log(`Use GraphQL at http://localhost:${PORT}${server.graphqlPath}`);
+};
+
+startServer();
+
+app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 
 // if we're in production, serve client/build as static assets
